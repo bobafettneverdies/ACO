@@ -22,8 +22,8 @@ namespace ACO
             {
                 Console.WriteLine("\nBegin Ant Colony Optimization demo\n");
 
-                int numCities = 60;
-                int numAnts = 4;
+                int numCities = 25;
+                int numAnts = 3;
                 int maxTime = 1000;
 
                 Console.WriteLine("Number cities in problem = " + numCities);
@@ -40,6 +40,7 @@ namespace ACO
                 int[][] dists = MakeGraphDistances(numCities);
                 
                 AntColonyOptimisation antColonyOptimisation = new AntColonyOptimisation(alpha, beta, rho, Q, numAnts, maxTime);
+
                 int[] bestTrail = antColonyOptimisation.GetBestTrail(dists, numCities);
 
                 Console.WriteLine("\nTime complete");
@@ -48,6 +49,21 @@ namespace ACO
                 Display(bestTrail);
 
                 double bestLength = Length(bestTrail, dists);
+
+                Console.WriteLine("\nLength of best trail found: " + bestLength.ToString("F1"));
+
+                int startPoint = 15;
+
+                Console.WriteLine("\nBegin Ant Colony Optimization with fixed start point {0}\n", startPoint);
+
+                bestTrail = antColonyOptimisation.GetBestTrail(dists, numCities, 15);
+
+                Console.WriteLine("\nTime complete");
+
+                Console.WriteLine("\nBest trail found:");
+                Display(bestTrail);
+
+                bestLength = Length(bestTrail, dists);
 
                 Console.WriteLine("\nLength of best trail found: " + bestLength.ToString("F1"));
 

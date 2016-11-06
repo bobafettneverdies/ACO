@@ -16,21 +16,58 @@ namespace ACO
 
         private int maxTime;
 
+        private bool isStartPointFixed = false;
+        private int startPoint;
+
+        private bool isEndPointFixed = false;
+        private int endPoint;
+
         public AntColonyOptimisation(int pheromoneImportanceRate, int distanceImportanceRate,
             double pheromoneDecreaseFactor, double pheromoneIncreaseFactor, int numAnts, int maxTime)
         {
-            this.alpha = pheromoneImportanceRate;
-            this.beta = distanceImportanceRate;
-            this.rho = pheromoneDecreaseFactor;
-            this.Q = pheromoneIncreaseFactor;
+            alpha = pheromoneImportanceRate;
+            beta = distanceImportanceRate;
+            rho = pheromoneDecreaseFactor;
+            Q = pheromoneIncreaseFactor;
+
             this.numAnts = numAnts;
             this.maxTime = maxTime;
+
             random = new Random(0);
         }
 
         public int[] GetBestTrail(int[][] dists, int numCities)
         {
-            int[][] ants = InitAnts(numAnts, numCities);
+            isStartPointFixed = false;
+            isEndPointFixed = false;
+
+            return FindBestTrail(dists, numCities);
+        }
+
+        public int[] GetBestTrail(int[][] dists, int numCities, int startPoint)
+        {
+            isStartPointFixed = true;
+            isEndPointFixed = false;
+
+            this.startPoint = startPoint;
+
+            return FindBestTrail(dists, numCities);
+        }
+
+        public int[] GetBestTrail(int[][] dists, int numCities, int startPoint, int endPoint)
+        {
+            isStartPointFixed = true;
+            isEndPointFixed = true;
+
+            this.startPoint = startPoint;
+            this.endPoint = endPoint;
+
+            return FindBestTrail(dists, numCities);
+        }
+
+        private int[] FindBestTrail(int[][] dists, int numCities)
+        {
+            int[][] ants = InitAnts(numCities);
             // initialize ants to random trails
 
             int[] bestTrail = BestTrail(ants, dists);
@@ -59,12 +96,12 @@ namespace ACO
             return bestTrail;
         }
 
-        private int[][] InitAnts(int numAnts, int numCities)
+        private int[][] InitAnts(int numCities)
         {
             int[][] ants = new int[numAnts][];
             for (int k = 0; k <= numAnts - 1; k++)
             {
-                int start = random.Next(0, numCities);
+                int start = isStartPointFixed ? startPoint : random.Next(0, numCities);
                 ants[k] = RandomTrail(start, numCities);
             }
             return ants;
@@ -141,9 +178,9 @@ namespace ACO
             }
             int numCities = ants[0].Length;
             //INSTANT VB NOTE: The local variable bestTrail was renamed since Visual Basic will not allow local variables with the same name as their enclosing function or property:
-            int[] bestTrail_Renamed = new int[numCities];
-            ants[idxBestLength].CopyTo(bestTrail_Renamed, 0);
-            return bestTrail_Renamed;
+            int[] bestTrailRenamed = new int[numCities];
+            ants[idxBestLength].CopyTo(bestTrailRenamed, 0);
+            return bestTrailRenamed;
         }
 
         // --------------------------------------------------------------------------------------------
@@ -173,13 +210,13 @@ namespace ACO
             int numCities = pheromones.Length;
             for (int k = 0; k <= ants.Length - 1; k++)
             {
-                int start = random.Next(0, numCities);
-                int[] newTrail = BuildTrail(k, start, pheromones, dists);
+                int start = isStartPointFixed ? startPoint : random.Next(0, numCities);
+                int[] newTrail = BuildTrail(start, pheromones, dists);
                 ants[k] = newTrail;
             }
         }
 
-        private int[] BuildTrail(int k, int start, double[][] pheromones, int[][] dists)
+        private int[] BuildTrail(int start, double[][] pheromones, int[][] dists)
         {
             int numCities = pheromones.Length;
             int[] trail = new int[numCities];
@@ -189,17 +226,17 @@ namespace ACO
             for (int i = 0; i <= numCities - 2; i++)
             {
                 int cityX = trail[i];
-                int next = NextCity(k, cityX, visited, pheromones, dists);
+                int next = NextCity(cityX, visited, pheromones, dists);
                 trail[i + 1] = next;
                 visited[next] = true;
             }
             return trail;
         }
 
-        private int NextCity(int k, int cityX, bool[] visited, double[][] pheromones, int[][] dists)
+        private int NextCity(int cityX, bool[] visited, double[][] pheromones, int[][] dists)
         {
-            // for ant k (with visited[]), at nodeX, what is next node in trail?
-            double[] probs = MoveProbs(k, cityX, visited, pheromones, dists);
+            // for ant (with visited[]), at nodeX, what is next node in trail?
+            double[] probs = MoveProbs(cityX, visited, pheromones, dists);
 
             double[] cumul = new double[probs.Length + 1];
             for (int i = 0; i <= probs.Length - 1; i++)
@@ -220,9 +257,9 @@ namespace ACO
             throw new Exception("Failure to return valid city in NextCity");
         }
 
-        private double[] MoveProbs(int k, int cityX, bool[] visited, double[][] pheromones, int[][] dists)
+        private double[] MoveProbs(int cityX, bool[] visited, double[][] pheromones, int[][] dists)
         {
-            // for ant k, located at nodeX, with visited[], return the prob of moving to each city
+            // for ant, located at nodeX, with visited[], return the prob of moving to each city
             int numCities = pheromones.Length;
             double[] taueta = new double[numCities];
             // inclues cityX and visited cities
@@ -236,7 +273,7 @@ namespace ACO
                     taueta[i] = 0.0;
                     // prob of moving to self is 0
                 }
-                else if (visited[i] == true)
+                else if (visited[i])
                 {
                     taueta[i] = 0.0;
                     // prob of moving to a visited city is 0
@@ -278,7 +315,7 @@ namespace ACO
                         // length of ant k trail
                         double decrease = (1.0 - rho) * pheromones[i][j];
                         double increase = 0.0;
-                        if (EdgeInTrail(i, j, ants[k]) == true)
+                        if (EdgeInTrail(i, j, ants[k]))
                         {
                             increase = (Q / length);
                         }
@@ -310,38 +347,43 @@ namespace ACO
             {
                 return true;
             }
-            else if (idx == 0 && trail[lastIndex] == cityY)
+
+            if (idx == 0 && trail[lastIndex] == cityY)
             {
                 return true;
             }
-            else if (idx == 0)
+
+            if (idx == 0)
             {
                 return false;
             }
-            else if (idx == lastIndex && trail[lastIndex - 1] == cityY)
+
+            if (idx == lastIndex && trail[lastIndex - 1] == cityY)
             {
                 return true;
             }
-            else if (idx == lastIndex && trail[0] == cityY)
+
+            if (idx == lastIndex && trail[0] == cityY)
             {
                 return true;
             }
-            else if (idx == lastIndex)
+
+            if (idx == lastIndex)
             {
                 return false;
             }
-            else if (trail[idx - 1] == cityY)
+
+            if (trail[idx - 1] == cityY)
             {
                 return true;
             }
-            else if (trail[idx + 1] == cityY)
+
+            if (trail[idx + 1] == cityY)
             {
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            
+            return false;
         }
         
         private double Distance(int cityX, int cityY, int[][] dists)
