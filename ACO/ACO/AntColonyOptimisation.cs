@@ -16,10 +16,10 @@ namespace ACO
 
         private int maxTime;
 
-        private bool isStartPointFixed = false;
+        private bool isStartPointFixed;
         private int startPoint;
 
-        private bool isEndPointFixed = false;
+        private bool isEndPointFixed;
         private int endPoint;
 
         public AntColonyOptimisation(int pheromoneImportanceRate, int distanceImportanceRate,
@@ -102,9 +102,21 @@ namespace ACO
             for (int k = 0; k <= numAnts - 1; k++)
             {
                 int start = isStartPointFixed ? startPoint : random.Next(0, numCities);
-                ants[k] = RandomTrail(start, numCities);
+                ants[k] = isEndPointFixed ? RandomTrail(start, endPoint, numCities) : RandomTrail(start, numCities);
             }
             return ants;
+        }
+
+        private int[] RandomTrail(int start, int end, int numCities)
+        {
+            int[] trail = RandomTrail(start, numCities);
+
+            int idx = IndexOfTarget(trail, end);
+            int temp = trail[numCities - 1];
+            trail[numCities - 1] = trail[idx];
+            trail[idx] = temp;
+
+            return trail;
         }
 
         private int[] RandomTrail(int start, int numCities)
@@ -177,10 +189,9 @@ namespace ACO
                 }
             }
             int numCities = ants[0].Length;
-            //INSTANT VB NOTE: The local variable bestTrail was renamed since Visual Basic will not allow local variables with the same name as their enclosing function or property:
-            int[] bestTrailRenamed = new int[numCities];
-            ants[idxBestLength].CopyTo(bestTrailRenamed, 0);
-            return bestTrailRenamed;
+            int[] bestTrail = new int[numCities];
+            ants[idxBestLength].CopyTo(bestTrail, 0);
+            return bestTrail;
         }
 
         // --------------------------------------------------------------------------------------------
@@ -197,7 +208,7 @@ namespace ACO
                 for (int j = 0; j <= pheromones[i].Length - 1; j++)
                 {
                     pheromones[i][j] = 0.01;
-                    // otherwise first call to UpdateAnts -> BuiuldTrail -> NextNode -> MoveProbs => all 0.0 => throws
+                    // otherwise first call to UpdateAnts -> BuildTrail -> NextNode -> MoveProbs => all 0.0 => throws
                 }
             }
             return pheromones;
@@ -211,9 +222,28 @@ namespace ACO
             for (int k = 0; k <= ants.Length - 1; k++)
             {
                 int start = isStartPointFixed ? startPoint : random.Next(0, numCities);
-                int[] newTrail = BuildTrail(start, pheromones, dists);
+                int[] newTrail = isEndPointFixed ? BuildTrail(start, endPoint, pheromones, dists) : BuildTrail(start, pheromones, dists);
                 ants[k] = newTrail;
             }
+        }
+
+        private int[] BuildTrail(int start, int end, double[][] pheromones, int[][] dists)
+        {
+            int numCities = pheromones.Length;
+            int[] trail = new int[numCities];
+            bool[] visited = new bool[numCities];
+            trail[0] = start;
+            visited[start] = true;
+            trail[numCities - 1] = end;
+            visited[end] = true;
+            for (int i = 0; i <= numCities - 3; i++)
+            {
+                int cityX = trail[i];
+                int next = NextCity(cityX, visited, pheromones, dists);
+                trail[i + 1] = next;
+                visited[next] = true;
+            }
+            return trail;
         }
 
         private int[] BuildTrail(int start, double[][] pheromones, int[][] dists)

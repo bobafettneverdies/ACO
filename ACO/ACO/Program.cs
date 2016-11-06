@@ -41,6 +41,8 @@ namespace ACO
                 
                 AntColonyOptimisation antColonyOptimisation = new AntColonyOptimisation(alpha, beta, rho, Q, numAnts, maxTime);
 
+                Console.WriteLine("\nBegin Ant Colony Optimization");
+
                 int[] bestTrail = antColonyOptimisation.GetBestTrail(dists, numCities);
 
                 Console.WriteLine("\nTime complete");
@@ -54,9 +56,24 @@ namespace ACO
 
                 int startPoint = 15;
 
-                Console.WriteLine("\nBegin Ant Colony Optimization with fixed start point {0}\n", startPoint);
+                Console.WriteLine("\nBegin Ant Colony Optimization with fixed start point {0}", startPoint);
 
-                bestTrail = antColonyOptimisation.GetBestTrail(dists, numCities, 15);
+                bestTrail = antColonyOptimisation.GetBestTrail(dists, numCities, startPoint);
+
+                Console.WriteLine("\nTime complete");
+
+                Console.WriteLine("\nBest trail found:");
+                Display(bestTrail);
+
+                bestLength = Length(bestTrail, dists);
+
+                Console.WriteLine("\nLength of best trail found: " + bestLength.ToString("F1"));
+
+                int endPoint = 3;
+
+                Console.WriteLine("\nBegin Ant Colony Optimization with fixed start point {0} and fixed end point {1}", startPoint, endPoint);
+
+                bestTrail = antColonyOptimisation.GetBestTrail(dists, numCities, startPoint, endPoint);
 
                 Console.WriteLine("\nTime complete");
 
