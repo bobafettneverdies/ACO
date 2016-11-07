@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ACO
+namespace ACO.AntColony
 {
     public class AntColonyOptimisation
     {
@@ -67,7 +67,7 @@ namespace ACO
 
         private int[] FindBestTrail(int[][] dists, int numCities)
         {
-            int[][] ants = InitAnts(numCities);
+            var ants = InitAnts(numCities);
             // initialize ants to random trails
 
             int[] bestTrail = BestTrail(ants, dists);
@@ -75,13 +75,13 @@ namespace ACO
             double bestLength = Length(bestTrail, dists);
             // the length of the best trail
 
-            double[][] pheromones = InitPheromones(numCities);
+            Pheromone pheromone = new Pheromone(numCities);
 
             int time = 0;
             while (time < maxTime)
             {
-                UpdateAnts(ants, pheromones, dists);
-                UpdatePheromones(pheromones, ants, dists);
+                UpdateAnts(ants, pheromone, dists);
+                UpdatePheromones(pheromone, ants, dists);
 
                 int[] currBestTrail = BestTrail(ants, dists);
                 double currBestLength = Length(currBestTrail, dists);
@@ -96,13 +96,13 @@ namespace ACO
             return bestTrail;
         }
 
-        private int[][] InitAnts(int numCities)
+        private Ant[] InitAnts(int numCities)
         {
-            int[][] ants = new int[numAnts][];
+            var ants = new Ant[numAnts];
             for (int k = 0; k <= numAnts - 1; k++)
             {
                 int start = isStartPointFixed ? startPoint : random.Next(0, numCities);
-                ants[k] = isEndPointFixed ? RandomTrail(start, endPoint, numCities) : RandomTrail(start, numCities);
+                ants[k] = new Ant(isEndPointFixed ? RandomTrail(start, endPoint, numCities) : RandomTrail(start, numCities));
             }
             return ants;
         }
@@ -174,62 +174,40 @@ namespace ACO
 
         // -------------------------------------------------------------------------------------------- 
 
-        private int[] BestTrail(int[][] ants, int[][] dists)
+        private int[] BestTrail(Ant[] ants, int[][] dists)
         {
             // best trail has shortest total length
-            double bestLength = Length(ants[0], dists);
+            double bestLength = Length(ants[0].Trail, dists);
             int idxBestLength = 0;
             for (int k = 1; k <= ants.Length - 1; k++)
             {
-                double len = Length(ants[k], dists);
+                double len = Length(ants[k].Trail, dists);
                 if (len < bestLength)
                 {
                     bestLength = len;
                     idxBestLength = k;
                 }
             }
-            int numCities = ants[0].Length;
+            int numCities = ants[0].Trail.Length;
             int[] bestTrail = new int[numCities];
-            ants[idxBestLength].CopyTo(bestTrail, 0);
+            ants[idxBestLength].Trail.CopyTo(bestTrail, 0);
             return bestTrail;
         }
 
-        // --------------------------------------------------------------------------------------------
-
-        private double[][] InitPheromones(int numCities)
+        private void UpdateAnts(Ant[] ants, Pheromone pheromone, int[][] dists)
         {
-            double[][] pheromones = new double[numCities][];
-            for (int i = 0; i <= numCities - 1; i++)
-            {
-                pheromones[i] = new double[numCities];
-            }
-            for (int i = 0; i <= pheromones.Length - 1; i++)
-            {
-                for (int j = 0; j <= pheromones[i].Length - 1; j++)
-                {
-                    pheromones[i][j] = 0.01;
-                    // otherwise first call to UpdateAnts -> BuildTrail -> NextNode -> MoveProbs => all 0.0 => throws
-                }
-            }
-            return pheromones;
-        }
-
-        // --------------------------------------------------------------------------------------------
-
-        private void UpdateAnts(int[][] ants, double[][] pheromones, int[][] dists)
-        {
-            int numCities = pheromones.Length;
+            int numCities = pheromone.Size();
             for (int k = 0; k <= ants.Length - 1; k++)
             {
                 int start = isStartPointFixed ? startPoint : random.Next(0, numCities);
-                int[] newTrail = isEndPointFixed ? BuildTrail(start, endPoint, pheromones, dists) : BuildTrail(start, pheromones, dists);
-                ants[k] = newTrail;
+                int[] newTrail = isEndPointFixed ? BuildTrail(start, endPoint, pheromone, dists) : BuildTrail(start, pheromone, dists);
+                ants[k].Trail = newTrail;
             }
         }
 
-        private int[] BuildTrail(int start, int end, double[][] pheromones, int[][] dists)
+        private int[] BuildTrail(int start, int end, Pheromone pheromone, int[][] dists)
         {
-            int numCities = pheromones.Length;
+            int numCities = pheromone.Size();
             int[] trail = new int[numCities];
             bool[] visited = new bool[numCities];
             trail[0] = start;
@@ -239,16 +217,16 @@ namespace ACO
             for (int i = 0; i <= numCities - 3; i++)
             {
                 int cityX = trail[i];
-                int next = NextCity(cityX, visited, pheromones, dists);
+                int next = NextCity(cityX, visited, pheromone, dists);
                 trail[i + 1] = next;
                 visited[next] = true;
             }
             return trail;
         }
 
-        private int[] BuildTrail(int start, double[][] pheromones, int[][] dists)
+        private int[] BuildTrail(int start, Pheromone pheromone, int[][] dists)
         {
-            int numCities = pheromones.Length;
+            int numCities = pheromone.Size();
             int[] trail = new int[numCities];
             bool[] visited = new bool[numCities];
             trail[0] = start;
@@ -256,17 +234,17 @@ namespace ACO
             for (int i = 0; i <= numCities - 2; i++)
             {
                 int cityX = trail[i];
-                int next = NextCity(cityX, visited, pheromones, dists);
+                int next = NextCity(cityX, visited, pheromone, dists);
                 trail[i + 1] = next;
                 visited[next] = true;
             }
             return trail;
         }
 
-        private int NextCity(int cityX, bool[] visited, double[][] pheromones, int[][] dists)
+        private int NextCity(int cityX, bool[] visited, Pheromone pheromone, int[][] dists)
         {
             // for ant (with visited[]), at nodeX, what is next node in trail?
-            double[] probs = MoveProbs(cityX, visited, pheromones, dists);
+            double[] probs = MoveProbs(cityX, visited, pheromone, dists);
 
             double[] cumul = new double[probs.Length + 1];
             for (int i = 0; i <= probs.Length - 1; i++)
@@ -287,10 +265,10 @@ namespace ACO
             throw new Exception("Failure to return valid city in NextCity");
         }
 
-        private double[] MoveProbs(int cityX, bool[] visited, double[][] pheromones, int[][] dists)
+        private double[] MoveProbs(int cityX, bool[] visited, Pheromone pheromone, int[][] dists)
         {
             // for ant, located at nodeX, with visited[], return the prob of moving to each city
-            int numCities = pheromones.Length;
+            int numCities = pheromone.Size();
             double[] taueta = new double[numCities];
             // inclues cityX and visited cities
             double sum = 0.0;
@@ -310,7 +288,7 @@ namespace ACO
                 }
                 else
                 {
-                    taueta[i] = Math.Pow(pheromones[cityX][i], alpha) * Math.Pow((1.0 / Distance(cityX, i, dists)), beta);
+                    taueta[i] = Math.Pow(pheromone.Get(cityX, i), alpha) * Math.Pow((1.0 / Distance(cityX, i, dists)), beta);
                     // could be huge when pheromone[][] is big
                     if (taueta[i] < 0.0001)
                     {
@@ -333,35 +311,25 @@ namespace ACO
             return probs;
         }
 
-        private void UpdatePheromones(double[][] pheromones, int[][] ants, int[][] dists)
+        private void UpdatePheromones(Pheromone pheromone, Ant[] ants, int[][] dists)
         {
-            for (int i = 0; i <= pheromones.Length - 1; i++)
+            for (int i = 0; i <= pheromone.Size() - 1; i++)
             {
-                for (int j = i + 1; j <= pheromones[i].Length - 1; j++)
+                for (int j = i + 1; j <= pheromone.Size() - 1; j++)
                 {
                     for (int k = 0; k <= ants.Length - 1; k++)
                     {
-                        double length = Length(ants[k], dists);
+                        double length = Length(ants[k].Trail, dists);
                         // length of ant k trail
-                        double decrease = (1.0 - rho) * pheromones[i][j];
+                        double decrease = (1.0 - rho) * pheromone.Get(i, j);
                         double increase = 0.0;
-                        if (EdgeInTrail(i, j, ants[k]))
+                        if (EdgeInTrail(i, j, ants[k].Trail))
                         {
                             increase = (Q / length);
                         }
 
-                        pheromones[i][j] = decrease + increase;
-
-                        if (pheromones[i][j] < 0.0001)
-                        {
-                            pheromones[i][j] = 0.0001;
-                        }
-                        else if (pheromones[i][j] > 100000.0)
-                        {
-                            pheromones[i][j] = 100000.0;
-                        }
-
-                        pheromones[j][i] = pheromones[i][j];
+                        pheromone.Set(i, j, decrease + increase);
+                        pheromone.Set(j, i, pheromone.Get(i, j));
                     }
                 }
             }

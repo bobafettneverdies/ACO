@@ -43,7 +43,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AntColonyOptimisation.cs" />
+    <Compile Include="AntColony\Ant.cs" />
+    <Compile Include="AntColony\AntColonyOptimisation.cs" />
+    <Compile Include="AntColony\Pheromone.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
