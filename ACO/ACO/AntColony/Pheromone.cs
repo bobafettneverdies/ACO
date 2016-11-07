@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Schema;
-
-namespace ACO.AntColony
+﻿namespace ACO.AntColony
 {
     class Pheromone
     {
@@ -14,11 +7,11 @@ namespace ACO.AntColony
         private const double MaxValue = 100000.0;
         private const double DefaultValue = 0.01;
 
-        public double[][] Pheromones;
+        private double[][] pheromoneLevel;
 
         public Pheromone(int numCities)
         {
-            Pheromones = InitPheromones(numCities);
+            pheromoneLevel = InitPheromones(numCities);
         }
 
         private double[][] InitPheromones(int numCities)
@@ -40,27 +33,27 @@ namespace ACO.AntColony
 
         public int Size()
         {
-            return Pheromones.Length;
+            return pheromoneLevel.Length;
         }
 
         public double Get(int i, int j)
         {
-            return Pheromones[i][j];
+            return pheromoneLevel[i][j];
         }
 
         public void Set(int i, int j, double value)
         {
             if (value < MinValue)
             {
-                Pheromones[i][j] = MinValue;
+                pheromoneLevel[i][j] = MinValue;
             }
             else if (value > MaxValue)
             {
-                Pheromones[i][j] = MaxValue;
+                pheromoneLevel[i][j] = MaxValue;
             }
             else
             {
-                Pheromones[i][j] = value;
+                pheromoneLevel[i][j] = value;
             }
 
         } 
