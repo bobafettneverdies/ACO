@@ -32,8 +32,6 @@ namespace ACO.AntColony
 
             this.numAnts = numAnts;
             this.maxTime = maxTime;
-
-            random = new Random(0);
         }
 
         public int[] GetBestTrail(int[][] dists, int numCities)
@@ -67,6 +65,8 @@ namespace ACO.AntColony
 
         private int[] FindBestTrail(int[][] dists, int numCities)
         {
+            random = new Random(0);
+
             var ants = InitAnts(numCities);
             // initialize ants to random trails
 
@@ -89,7 +89,7 @@ namespace ACO.AntColony
                 {
                     bestLength = currBestLength;
                     bestTrail = currBestTrail;
-                    //Console.WriteLine("New best length of " + bestLength.ToString("F1") + " found at time " + time);
+                    //Console.WriteLine("New best length of " + bestLength.ToString("F1") + " found at " + time);
                 }
                 time += 1;
             }

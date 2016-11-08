@@ -25,7 +25,7 @@ namespace ACO
 
                 int numCities = 25;
                 int numAnts = 3;
-                int maxTime = 1000;
+                int maxTime = 100;
 
                 Console.WriteLine("Number cities in problem = " + numCities);
 
