@@ -196,7 +196,7 @@ namespace ACO.AntColony
 
         private void UpdateAnts(Ant[] ants, Pheromone pheromone, int[][] dists)
         {
-            int numCities = pheromone.Size();
+            int numCities = pheromone.Size;
             for (int k = 0; k <= ants.Length - 1; k++)
             {
                 int start = isStartPointFixed ? startPoint : random.Next(0, numCities);
@@ -207,7 +207,7 @@ namespace ACO.AntColony
 
         private int[] BuildTrail(int start, int end, Pheromone pheromone, int[][] dists)
         {
-            int numCities = pheromone.Size();
+            int numCities = pheromone.Size;
             int[] trail = new int[numCities];
             bool[] visited = new bool[numCities];
             trail[0] = start;
@@ -226,7 +226,7 @@ namespace ACO.AntColony
 
         private int[] BuildTrail(int start, Pheromone pheromone, int[][] dists)
         {
-            int numCities = pheromone.Size();
+            int numCities = pheromone.Size;
             int[] trail = new int[numCities];
             bool[] visited = new bool[numCities];
             trail[0] = start;
@@ -268,7 +268,7 @@ namespace ACO.AntColony
         private double[] MoveProbs(int cityX, bool[] visited, Pheromone pheromone, int[][] dists)
         {
             // for ant, located at nodeX, with visited[], return the prob of moving to each city
-            int numCities = pheromone.Size();
+            int numCities = pheromone.Size;
             double[] taueta = new double[numCities];
             // inclues cityX and visited cities
             double sum = 0.0;
@@ -313,9 +313,9 @@ namespace ACO.AntColony
 
         private void UpdatePheromones(Pheromone pheromone, Ant[] ants, int[][] dists)
         {
-            for (int i = 0; i <= pheromone.Size() - 1; i++)
+            for (int i = 0; i <= pheromone.Size - 1; i++)
             {
-                for (int j = i + 1; j <= pheromone.Size() - 1; j++)
+                for (int j = i + 1; j <= pheromone.Size - 1; j++)
                 {
                     for (int k = 0; k <= ants.Length - 1; k++)
                     {
@@ -329,7 +329,6 @@ namespace ACO.AntColony
                         }
 
                         pheromone.Set(i, j, decrease + increase);
-                        pheromone.Set(j, i, pheromone.Get(i, j));
                     }
                 }
             }

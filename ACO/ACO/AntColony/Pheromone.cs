@@ -31,10 +31,7 @@
             return pheromones;
         }
 
-        public int Size()
-        {
-            return pheromoneLevel.Length;
-        }
+        public int Size => pheromoneLevel.Length;
 
         public double Get(int i, int j)
         {
@@ -55,6 +52,8 @@
             {
                 pheromoneLevel[i][j] = value;
             }
+
+            pheromoneLevel[j][i] = pheromoneLevel[i][j];
 
         } 
 
