@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ACO.AntColony;
 
 namespace ACO
@@ -38,13 +40,14 @@ namespace ACO
                 Console.WriteLine("Q (pheromone deposit factor) = " + Q.ToString("F2"));
 
                 Console.WriteLine("\nInitialing dummy graph distances");
-                int[][] dists = MakeGraphDistances(numCities);
+                IList<RouteDistance> dists = MakeGraphDistances(numCities);
+                string[] routePoints = MakeRoutePoints(numCities);
                 
                 AntColonyOptimisation antColonyOptimisation = new AntColonyOptimisation(alpha, beta, rho, Q, numAnts, maxTime);
 
                 Console.WriteLine("\nBegin Ant Colony Optimization");
 
-                int[] bestTrail = antColonyOptimisation.GetBestTrail(dists, numCities);
+                string[] bestTrail = antColonyOptimisation.GetBestTrail(dists, routePoints);
 
                 Console.WriteLine("\nTime complete");
 
@@ -55,11 +58,11 @@ namespace ACO
 
                 Console.WriteLine("\nLength of best trail found: " + bestLength.ToString("F1"));
 
-                int startPoint = 15;
+                string startPoint = routePoints[15];
 
                 Console.WriteLine("\nBegin Ant Colony Optimization with fixed start point {0}", startPoint);
 
-                bestTrail = antColonyOptimisation.GetBestTrail(dists, numCities, startPoint);
+                bestTrail = antColonyOptimisation.GetBestTrail(dists, routePoints, startPoint);
 
                 Console.WriteLine("\nTime complete");
 
@@ -70,11 +73,11 @@ namespace ACO
 
                 Console.WriteLine("\nLength of best trail found: " + bestLength.ToString("F1"));
 
-                int endPoint = 3;
+                string endPoint = routePoints[3];
 
                 Console.WriteLine("\nBegin Ant Colony Optimization with fixed start point {0} and fixed end point {1}", startPoint, endPoint);
 
-                bestTrail = antColonyOptimisation.GetBestTrail(dists, numCities, startPoint, endPoint);
+                bestTrail = antColonyOptimisation.GetBestTrail(dists, routePoints, startPoint, endPoint);
 
                 Console.WriteLine("\nTime complete");
 
@@ -96,7 +99,7 @@ namespace ACO
 
         }
 
-        private static double Length(int[] trail, int[][] dists)
+        private static double Length(string[] trail, IList<RouteDistance> dists)
         {
             // total length of a trail
             double result = 0.0;
@@ -107,32 +110,43 @@ namespace ACO
             return result;
         }
         
-        private static int[][] MakeGraphDistances(int numCities)
+        private static IList<RouteDistance> MakeGraphDistances(int numCities)
         {
-            int[][] dists = new int[numCities][];
-            for (int i = 0; i <= dists.Length - 1; i++)
-            {
-                dists[i] = new int[numCities];
-            }
+            IList<RouteDistance> dists = new List<RouteDistance>(numCities * numCities);
             for (int i = 0; i <= numCities - 1; i++)
             {
                 for (int j = i + 1; j <= numCities - 1; j++)
                 {
-                    int d = random.Next(1, 9);
+                    double d = random.Next(1, 9);
                     // [1,8]
-                    dists[i][j] = d;
-                    dists[j][i] = d;
+                    dists.Add(new RouteDistance(GetCityName(i), GetCityName(j), d));
+                    dists.Add(new RouteDistance(GetCityName(j), GetCityName(i), d));
                 }
             }
             return dists;
         }
 
-        private static double Distance(int cityX, int cityY, int[][] dists)
+        private static string[] MakeRoutePoints(int numCities)
         {
-            return dists[cityX][cityY];
+            var result = new string[numCities];
+            for (int i = 0; i < numCities; i++)
+            {
+                result[i] = GetCityName(i);
+            }
+            return result;
         }
 
-        private static void Display(int[] trail)
+        private static string GetCityName(int i)
+        {
+            return "City" + i;
+        }
+
+        private static double Distance(string cityX, string cityY, IList<RouteDistance> dists)
+        {
+            return dists.First(x => x.FirstPoint == cityX && x.SecondPoint == cityY).Distance;
+        }
+
+        private static void Display(string[] trail)
         {
             for (int i = 0; i <= trail.Length - 1; i++)
             {

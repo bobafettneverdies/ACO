@@ -1,10 +1,10 @@
 ﻿namespace ACO.AntColony
 {
-    class Ant
+    public class Ant
     {
-        public int[] Trail;
+        public string[] Trail;
 
-        public Ant(int[] trail)
+        public Ant(string[] trail)
         {
             Trail = trail;
         }

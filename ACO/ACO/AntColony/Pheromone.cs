@@ -1,25 +1,29 @@
-﻿namespace ACO.AntColony
+﻿using System;
+
+namespace ACO.AntColony
 {
-    class Pheromone
+    public class Pheromone
     {
 
         private const double MinValue = 0.0001;
         private const double MaxValue = 100000.0;
         private const double DefaultValue = 0.01;
 
+        private string[] routePoints;
         private double[][] pheromoneLevel;
 
-        public Pheromone(int numCities)
+        public Pheromone(string[] routePoints)
         {
-            pheromoneLevel = InitPheromones(numCities);
+            this.routePoints = routePoints;
+            InitPheromones();
         }
 
-        private double[][] InitPheromones(int numCities)
+        private void InitPheromones()
         {
-            double[][] pheromones = new double[numCities][];
-            for (int i = 0; i <= numCities - 1; i++)
+            double[][] pheromones = new double[routePoints.Length][];
+            for (int i = 0; i < routePoints.Length; i++)
             {
-                pheromones[i] = new double[numCities];
+                pheromones[i] = new double[routePoints.Length];
             }
             for (int i = 0; i <= pheromones.Length - 1; i++)
             {
@@ -28,35 +32,48 @@
                     pheromones[i][j] = DefaultValue;
                 }
             }
-            return pheromones;
+            pheromoneLevel = pheromones;
         }
 
-        public int Size()
+        public int Size => routePoints.Length;
+        
+
+        public double Get(string i, string j)
         {
-            return pheromoneLevel.Length;
+            return pheromoneLevel[IndexOf(i)][IndexOf(j)];
         }
 
-        public double Get(int i, int j)
-        {
-            return pheromoneLevel[i][j];
-        }
-
-        public void Set(int i, int j, double value)
+        public void Set(string i, string j, double value)
         {
             if (value < MinValue)
             {
-                pheromoneLevel[i][j] = MinValue;
+                pheromoneLevel[IndexOf(i)][IndexOf(j)] = MinValue;
             }
             else if (value > MaxValue)
             {
-                pheromoneLevel[i][j] = MaxValue;
+                pheromoneLevel[IndexOf(i)][IndexOf(j)] = MaxValue;
             }
             else
             {
-                pheromoneLevel[i][j] = value;
+                pheromoneLevel[IndexOf(i)][IndexOf(j)] = value;
             }
 
-        } 
+            pheromoneLevel[IndexOf(j)][IndexOf(i)] = pheromoneLevel[IndexOf(i)][IndexOf(j)];
+
+        }
+
+        private int IndexOf(string target)
+        {
+            // helper for RandomTrail
+            for (int i = 0; i <= routePoints.Length - 1; i++)
+            {
+                if (routePoints[i] == target)
+                {
+                    return i;
+                }
+            }
+            throw new Exception("Target not found in IndexOfTarget");
+        }
 
     }
 }
